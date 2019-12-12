@@ -1,0 +1,692 @@
+{
+    "$schema": "https://raw.githubusercontent.com/mspnp/template-building-blocks/master/schemas/buildingBlocks.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "buildingBlocks": {
+            "value": [
+                {
+                    "type": "VirtualNetwork",
+                    "settings": [
+                        {
+                            "name": "ra-ntier-vnet",
+                            "addressPrefixes": [
+                                "10.0.0.0/16"
+                            ],
+                            "subnets": [
+                                {
+                                    "name": "web",
+                                    "addressPrefix": "10.0.1.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "biz",
+                                    "addressPrefix": "10.0.2.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "sql",
+                                    "addressPrefix": "10.0.3.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        },
+                                        {
+                                            "service": "Microsoft.Storage"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "ad",
+                                    "addressPrefix": "10.0.4.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "mgmt",
+                                    "addressPrefix": "10.0.0.128/25",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "appgateway",
+                                    "addressPrefix": "10.0.5.0/25",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "dnsServers": [
+                                "168.63.129.16"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Template",
+                    "settings": {
+                        "template": {
+                            "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "parameters": {},
+                            "variables": {},
+                            "resources": [
+                                {
+                                    "type": "Microsoft.Storage/storageAccounts",
+                                    "apiVersion": "2019-04-01",
+                                    "location": "[resourceGroup().location]",
+                                    "name": "[concat('sqlcw', uniqueString(resourceGroup().id))]",
+                                    "kind": "StorageV2",
+                                    "sku": {
+                                        "name": "Standard_LRS"
+                                    },
+                                    "properties": {
+                                        "networkAcls": {
+                                            "bypass": "AzureServices",
+                                            "virtualNetworkRules": [
+                                                {
+                                                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'ra-ntier-vnet', 'sql')]",
+                                                    "action": "Allow"
+                                                }
+                                            ],
+                                            "ipRules": [],
+                                            "defaultAction": "Deny"
+                                        },
+                                        "supportsHttpsTrafficOnly": true,
+                                        "encryption": {
+                                            "services": {
+                                                "file": {
+                                                    "enabled": true
+                                                },
+                                                "blob": {
+                                                    "enabled": true
+                                                }
+                                            },
+                                            "keySource": "Microsoft.Storage"
+                                        }
+                                    }
+                                }
+                            ],
+                            "outputs": {}
+                        }
+                    }
+                },
+                {
+                    "type": "VirtualMachine",
+                    "settings": {
+                        "vmCount": 1,
+                        "namePrefix": "jb",
+                        "size": "Standard_DS2_v2",
+                        "adminUsername": "testadminuser",
+                        "adminPassword": "[replace-with-password]",
+                        "virtualNetwork": {
+                            "name": "ra-ntier-vnet"
+                        },
+                        "nics": [
+                            {
+                                "privateIPAllocationMethod": "Dynamic",
+                                "subnetName": "mgmt",
+                                "publicIpAddress": {
+                                    "sku": "Basic",
+                                    "publicIPAllocationMethod": "Static"
+                                }
+                            }
+                        ],
+                        "osType": "windows",
+                        "extensions": [
+                            {
+                                "name": "IaaSAntimalware",
+                                "publisher": "Microsoft.Azure.Security",
+                                "type": "IaaSAntimalware",
+                                "typeHandlerVersion": "1.3",
+                                "autoUpgradeMinorVersion": true,
+                                "settings": {
+                                    "AntimalwareEnabled": true,
+                                    "RealtimeProtectionEnabled": "true",
+                                    "ScheduledScanSettings": {
+                                        "isEnabled": "false",
+                                        "day": "7",
+                                        "time": "120",
+                                        "scanType": "Quick"
+                                    },
+                                    "Exclusions": {
+                                        "Extensions": "",
+                                        "Paths": "",
+                                        "Processes": ""
+                                    }
+                                },
+                                "protectedSettings": {}
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "VirtualMachine",
+                    "settings": {
+                        "vmCount": 2,
+                        "osType": "windows",
+                        "namePrefix": "ad",
+                        "size": "Standard_DS3_v2",
+                        "adminUserName": "adminUser",
+                        "adminPassword": "[replace-with-password]",
+                        "nics": [
+                            {
+                                "subnetName": "ad",
+                                "isPublic": false,
+                                "privateIPAllocationMethod": "Static",
+                                "startingIPAddress": "10.0.4.4"
+                            }
+                        ],
+                        "virtualNetwork": {
+                            "name": "ra-ntier-vnet"
+                        },
+                        "dataDisks": {
+                            "count": 1,
+                            "diskSizeGB": 127,
+                            "caching": "None",
+                            "createOption": "empty"
+                        }
+                    }
+                },
+                {
+                    "type": "VirtualMachineExtension",
+                    "settings": [
+                        {
+                            "vms": [
+                                "ad-vm1"
+                            ],
+                            "extensions": [
+                                {
+                                    "name": "addsc",
+                                    "publisher": "Microsoft.Powershell",
+                                    "type": "DSC",
+                                    "typeHandlerVersion": "2.7",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "configuration": {
+                                            "url": "https://github.com/mspnp/reference-architectures/raw/master/virtual-machines/n-tier-windows/adds.zip",
+                                            "script": "primary.ps1",
+                                            "function": "CreateForest"
+                                        }
+                                    },
+                                    "protectedSettings": {
+                                        "configurationArguments": {
+                                            "DomainName": "contoso.com",
+                                            "DomainNetbiosName": "CONTOSO",
+                                            "SiteName": "Azbb-Tutorial-Site",
+                                            "OnpremSiteName": "Default-First-Site-Name",
+                                            "Cidr": "10.0.0.0/16",
+                                            "ReplicationFrequency": 10,
+                                            "AdminCreds": {
+                                                "UserName": "adminUser",
+                                                "Password": "[replace-with-password]"
+                                            },
+                                            "SafeModeAdminCreds": {
+                                                "UserName": "testsafeadminuser",
+                                                "Password": "[replace-with-safe-mode-password]"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "VirtualNetwork",
+                    "settings": [
+                        {
+                            "name": "ra-ntier-vnet",
+                            "addressPrefixes": [
+                                "10.0.0.0/16"
+                            ],
+                            "subnets": [
+                                {
+                                    "name": "web",
+                                    "addressPrefix": "10.0.1.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "biz",
+                                    "addressPrefix": "10.0.2.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "sql",
+                                    "addressPrefix": "10.0.3.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        },
+                                        {
+                                            "service": "Microsoft.Storage"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "ad",
+                                    "addressPrefix": "10.0.4.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "mgmt",
+                                    "addressPrefix": "10.0.0.128/25",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "appgateway",
+                                    "addressPrefix": "10.0.5.0/25",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "dnsServers": [
+                                "10.0.4.4",
+                                "168.63.129.16"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "VirtualMachineExtension",
+                    "settings": [
+                        {
+                            "vms": [
+                                "ad-vm2"
+                            ],
+                            "extensions": [
+                                {
+                                    "name": "addsc",
+                                    "publisher": "Microsoft.Powershell",
+                                    "type": "DSC",
+                                    "typeHandlerVersion": "2.7",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "configuration": {
+                                            "url": "https://github.com/mspnp/reference-architectures/raw/master/virtual-machines/n-tier-windows/adds.zip",
+                                            "script": "secondary.ps1",
+                                            "function": "CreateDomainController"
+                                        }
+                                    },
+                                    "protectedSettings": {
+                                        "configurationArguments": {
+                                            "DomainName": "contoso.com",
+                                            "DomainNetbiosName": "CONTOSO",
+                                            "PrimaryDcIpAddress": "10.0.4.4",
+                                            "AdminCreds": {
+                                                "UserName": "adminUser",
+                                                "Password": "[replace-with-password]"
+                                            },
+                                            "SafeModeAdminCreds": {
+                                                "UserName": "testsafeadminuser",
+                                                "Password": "[replace-with-safe-password]"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "VirtualNetwork",
+                    "settings": [
+                        {
+                            "name": "ra-ntier-vnet",
+                            "addressPrefixes": [
+                                "10.0.0.0/16"
+                            ],
+                            "subnets": [
+                                {
+                                    "name": "web",
+                                    "addressPrefix": "10.0.1.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "biz",
+                                    "addressPrefix": "10.0.2.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "sql",
+                                    "addressPrefix": "10.0.3.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        },
+                                        {
+                                            "service": "Microsoft.Storage"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "ad",
+                                    "addressPrefix": "10.0.4.0/24",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "mgmt",
+                                    "addressPrefix": "10.0.0.128/25",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "appgateway",
+                                    "addressPrefix": "10.0.5.0/25",
+                                    "serviceEndpoints": [
+                                        {
+                                            "service": "Microsoft.KeyVault"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "dnsServers": [
+                                "10.0.4.4",
+                                "10.0.4.5"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "VirtualMachine",
+                    "settings": [
+                        {
+                            "vmCount": 2,
+                            "namePrefix": "sql",
+                            "size": "Standard_DS12_v2",
+                            "computerNamePrefix": "sql",
+                            "adminUsername": "adminUser",
+                            "adminPassword": "[replace-with-password]",
+                            "osType": "windows",
+                            "imageReference": {
+                                "offer": "SQL2017-WS2016",
+                                "publisher": "MicrosoftSQLServer",
+                                "sku": "Enterprise",
+                                "version": "latest"
+                            },
+                            "dataDisks": {
+                                "count": 2,
+                                "diskSizeGB": 1023,
+                                "caching": "ReadOnly",
+                                "createOption": "empty",
+                                "managedDisk": {
+                                    "storageAccountType": "Premium_LRS"
+                                }
+                            },
+                            "virtualNetwork": {
+                                "name": "ra-ntier-vnet"
+                            },
+                            "nics": [
+                                {
+                                    "isPrimary": true,
+                                    "isPublic": false,
+                                    "subnetName": "sql",
+                                    "privateIPAllocationMethod": "Dynamic",
+                                    "dnsServers": [
+                                        "10.0.4.4",
+                                        "10.0.4.5"
+                                    ]
+                                }
+                            ],
+                            "extensions": [
+                                {
+                                    "name": "join-ad-domain",
+                                    "publisher": "Microsoft.Compute",
+                                    "type": "JsonADDomainExtension",
+                                    "typeHandlerVersion": "1.3",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "Name": "contoso.com",
+                                        "OUPath": "",
+                                        "User": "contoso.com\\adminUser",
+                                        "Restart": true,
+                                        "Options": 3
+                                    },
+                                    "protectedSettings": {
+                                        "Password": "[replace-with-password]"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "vmCount": 3,
+                            "namePrefix": "web",
+                            "size": "Standard_DS1_v2",
+                            "computerNamePrefix": "web",
+                            "adminUsername": "adminUser",
+                            "adminPassword": "[replace-with-password]",
+                            "virtualNetwork": {
+                                "name": "ra-ntier-vnet"
+                            },
+                            "nics": [
+                                {
+                                    "dnsServers": [],
+                                    "isPrimary": true,
+                                    "isPublic": false,
+                                    "privateIPAllocationMethod": "Static",
+                                    "startingIPAddress": "10.0.1.5",
+                                    "subnetName": "web"
+                                }
+                            ],
+                            "osType": "windows",
+                            "extensions": [
+                                {
+                                    "name": "join-ad-domain",
+                                    "publisher": "Microsoft.Compute",
+                                    "type": "JsonADDomainExtension",
+                                    "typeHandlerVersion": "1.3",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "Name": "contoso.com",
+                                        "OUPath": "",
+                                        "User": "contoso.com\\adminUser",
+                                        "Restart": true,
+                                        "Options": 3
+                                    },
+                                    "protectedSettings": {
+                                        "Password": "[replace-with-password]"
+                                    }
+                                }
+                            ],
+                            "applicationGatewaySettings": {
+                                "name": "webAppGateway",
+                                "sku": {
+                                    "tier": "WAF_v2"
+                                },
+                                "gatewayIPConfigurations": [
+                                    {
+                                        "name": "webIPConfig",
+                                        "subnetName": "appgateway"
+                                    }
+                                ],
+                                "frontendIPConfigurations": [
+                                    {
+                                        "name": "webFrontEndIPConfig1",
+                                        "applicationGatewayType": "Public"
+                                    }
+                                ],
+                                "frontendPorts": [
+                                    {
+                                        "name": "webFrontEndPort1",
+                                        "port": 80
+                                    }
+                                ],
+                                "backendAddressPools": [
+                                    {
+                                        "name": "webBackendAddressPool",
+                                        "backendAddresses": [
+                                            {
+                                                "ipAddress": "10.0.1.5"
+                                            },
+                                            {
+                                                "ipAddress": "10.0.1.6"
+                                            },
+                                            {
+                                                "ipAddress": "10.0.1.7"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "backendHttpSettingsCollection": [
+                                    {
+                                        "name": "webBackendHttpSetting1",
+                                        "port": 80,
+                                        "protocol": "Http",
+                                        "cookieBasedAffinity": "Disabled"
+                                    }
+                                ],
+                                "httpListeners": [
+                                    {
+                                        "name": "webHttpListener1",
+                                        "frontendIPConfigurationName": "webFrontEndIPConfig1",
+                                        "frontendPortName": "webFrontEndPort1",
+                                        "protocol": "Http"
+                                    }
+                                ],
+                                "requestRoutingRules": [
+                                    {
+                                        "name": "webRule1",
+                                        "ruleType": "Basic",
+                                        "httpListenerName": "webHttpListener1",
+                                        "backendAddressPoolName": "webBackendAddressPool",
+                                        "backendHttpSettingsName": "webBackendHttpSetting1"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "vmCount": 3,
+                            "namePrefix": "biz",
+                            "size": "Standard_DS1_v2",
+                            "computerNamePrefix": "biz",
+                            "adminUsername": "adminUser",
+                            "adminPassword": "[replace-with-password]",
+                            "virtualNetwork": {
+                                "name": "ra-ntier-vnet"
+                            },
+                            "nics": [
+                                {
+                                    "dnsServers": [],
+                                    "isPrimary": true,
+                                    "isPublic": false,
+                                    "privateIPAllocationMethod": "Dynamic",
+                                    "subnetName": "biz",
+                                    "backendPoolNames": [
+                                        "lb-bep1"
+                                    ]
+                                }
+                            ],
+                            "osType": "windows",
+                            "extensions": [
+                                {
+                                    "name": "join-ad-domain",
+                                    "publisher": "Microsoft.Compute",
+                                    "type": "JsonADDomainExtension",
+                                    "typeHandlerVersion": "1.3",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "Name": "contoso.com",
+                                        "OUPath": "",
+                                        "User": "contoso.com\\adminUser",
+                                        "Restart": true,
+                                        "Options": 3
+                                    },
+                                    "protectedSettings": {
+                                        "Password": "[replace-with-password]"
+                                    }
+                                }
+                            ],
+                            "loadBalancerSettings": {
+                                "frontendIPConfigurations": [
+                                    {
+                                        "name": "biz-lb-fe-config1",
+                                        "loadBalancerType": "Internal",
+                                        "internalLoadBalancerSettings": {
+                                            "privateIPAddress": "10.0.2.100",
+                                            "subnetName": "biz"
+                                        }
+                                    }
+                                ],
+                                "loadBalancingRules": [
+                                    {
+                                        "name": "lbr1",
+                                        "frontendPort": 80,
+                                        "backendPort": 80,
+                                        "protocol": "Tcp",
+                                        "backendPoolName": "lb-bep1",
+                                        "frontendIPConfigurationName": "biz-lb-fe-config1",
+                                        "enableFloatingIP": false,
+                                        "probeName": "lbp1"
+                                    }
+                                ],
+                                "probes": [
+                                    {
+                                        "name": "lbp1",
+                                        "port": 80,
+                                        "protocol": "Http",
+                                        "requestPath": "/"
+                                    }
+                                ],
+                                "backendPools": [
+                                    {
+                                        "name": "lb-bep1",
+                                        "nicIndex": 0
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
