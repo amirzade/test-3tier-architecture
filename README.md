@@ -26,7 +26,7 @@ SQL Server was built and configured with local admin user. Once AD is fully prov
 
 Blob Storage has been created to store SQL database backups.
 
-# Deplyment Steps
+# Deployment Steps
 Copy the ARM template from this repository and deploy via Azure Portal.
 1. Click on New and select Template Deployment
 2. Select Custom Deployment
