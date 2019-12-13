@@ -14,15 +14,15 @@ To access the test website please go to this URL http://20.43.99.39
 The network topology was designed as follows:
 ![alt text](https://github.com/amirzade/test-repository/blob/master/topology.svg)
 
-Each tier componenet was provisioed in its own subnet with a configured Network Security Group (NSG) to manage incoming and oitgoing traffic.
+Each tier componenet was provisioed in its own subnet with a configured Network Security Group (NSG) to manage incoming and outgoing traffic.
 
-The Jump Box has is accessible from the internet via a Public IP address to allow management and configuration of all VMs, this VM is intended to be used only during build and mainteance hours and this will remain shutdown.
+The Jump Box is accessible from the internet via a Public IP 20.43.100.9 to allow management and configuration of all VMs, this VM is intended to be used only during build and mainteance hours and any other time will remain shutdown.
 
 The Web Server (IIS) was configured with an Application Gateway with public IP 20.43.99.39 to allow the security management of web traffic. For demonstration purposes only HTTP on port 80 was opened.
 
-The Active Directory server was built but NOY configured with an internal domain yet, the purpose of this is to centrally manage authentication, group policy and security updates via WSUS.
+The Active Directory server was built but NOT yet configured with an internal domain, the purpose of this is to centrally manage authentication, group policy and security updates via WSUS.
 
-SQL Server was built and configured with local admin user.
+SQL Server was built and configured with local admin user. Once AD is fully provisioned it will be joined to the internal domain.
 
 Blob Storage has been created to store SQL database backups.
 
