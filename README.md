@@ -12,7 +12,7 @@ Windows Server 2016 Data Center edition was used for all VMs and SQL Server 2016
 To access the test website please go to this URL http://20.43.99.39
 
 The network topology was designed as follows:
-![alt text](https://github.com/amirzade/test-repository/blob/master/topology.svg)
+![alt text](https://github.com/amirzade/test-3tier-architecture/blob/master/network_topology.png)
 
 Each tier componenet was provisioed in its own subnet with a configured Network Security Group (NSG) to manage incoming and outgoing traffic.
 
@@ -31,6 +31,7 @@ Copy the ARM template from this repository and deploy via Azure Portal.
 1. Click on New and select Template Deployment
 2. Select Custom Deployment
 3. Click on Edit Template
-4. Load ARM tempalte from the JSON file
+4. Load ARM template from the JSON file
+5. Wait for deplpoyment to complete
 
 ![alt text](https://github.com/amirzade/test-repository/blob/master/deploy_template.png)
