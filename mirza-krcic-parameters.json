@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_ad_name": {
+            "value": null
+        },
+        "virtualMachines_jb_name": {
+            "value": null
+        },
+        "virtualMachines_sql_name": {
+            "value": null
+        },
+        "virtualMachines_web_name": {
+            "value": null
+        },
+        "networkInterfaces_ad434_name": {
+            "value": null
+        },
+        "networkInterfaces_jb576_name": {
+            "value": null
+        },
+        "publicIPAddresses_jb_ip_name": {
+            "value": null
+        },
+        "networkInterfaces_sql796_name": {
+            "value": null
+        },
+        "networkInterfaces_web253_name": {
+            "value": null
+        },
+        "publicIPAddresses_web_ip_name": {
+            "value": null
+        },
+        "applicationGateways_webappgw_name": {
+            "value": null
+        },
+        "networkSecurityGroups_ad_nsg_name": {
+            "value": null
+        },
+        "networkSecurityGroups_jb_nsg_name": {
+            "value": null
+        },
+        "storageAccounts_mksqlstorage_name": {
+            "value": null
+        },
+        "networkSecurityGroups_sql_nsg_name": {
+            "value": null
+        },
+        "networkSecurityGroups_web_nsg_name": {
+            "value": null
+        },
+        "virtualNetworks_mk_ntier_vnet_name": {
+            "value": null
+        },
+        "storageAccounts_mkcommonstorage_name": {
+            "value": null
+        },
+        "sqlVirtualMachines_sql_name": {
+            "value": null
+        },
+        "publicIPAddresses_webappgw_pub_ip_name": {
+            "value": null
+        },
+        "schedules_shutdown_computevm_ad_name": {
+            "value": null
+        },
+        "schedules_shutdown_computevm_jb_name": {
+            "value": null
+        },
+        "schedules_shutdown_computevm_sql_name": {
+            "value": null
+        },
+        "schedules_shutdown_computevm_web_name": {
+            "value": null
+        }
+    }
+}
