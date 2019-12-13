@@ -1,4 +1,4 @@
-# test-repository
+# 3-Tier Windows/SQL Architecture on Microsoft Azure  
 Created 3-tier architecture on Microsoft Azure with following components:
 - Jump Box
 - Web Server (IIS)
@@ -25,4 +25,3 @@ The Active Directory server was built but NOT yet configured with an internal do
 SQL Server was built and configured with local admin user. Once AD is fully provisioned it will be joined to the internal domain.
 
 Blob Storage has been created to store SQL database backups.
-
