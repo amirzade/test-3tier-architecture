@@ -32,6 +32,6 @@ Copy the ARM template from this repository and deploy via Azure Portal.
 2. Select Custom Deployment
 3. Click on Edit Template
 4. Load ARM template from the JSON file
-5. Wait for deplpoyment to complete
+5. Wait for deployment to complete
 
 ![alt text](https://github.com/amirzade/test-repository/blob/master/deploy_template.png)
