@@ -25,3 +25,12 @@ The Active Directory server was built but NOT yet configured with an internal do
 SQL Server was built and configured with local admin user. Once AD is fully provisioned it will be joined to the internal domain.
 
 Blob Storage has been created to store SQL database backups.
+
+# Deplyment Steps
+Copy the ARM template from this repository and deploy via Azure Portal.
+1. Click on New and select Template Deployment
+2. Select Custom Deployment
+3. Click on Edit Template
+4. Load ARM tempalte from the JSON file
+
+![alt text](https://github.com/amirzade/test-repository/blob/master/deploy_template.png)
